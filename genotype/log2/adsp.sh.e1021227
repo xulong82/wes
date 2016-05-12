@@ -1,0 +1,14 @@
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf chr20.merged.vcf
+	--maf 0.01
+	--out chr20.merged.filtered
+	--recode
+
+After filtering, kept 9949 out of 9949 Individuals
+Outputting VCF file...
+After filtering, kept 1347 out of a possible 39138 Sites
+Run Time = 375.00 seconds

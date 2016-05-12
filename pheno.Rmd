@@ -1,0 +1,176 @@
+---
+title: "ADSP's WES samples: phenotype and more"
+author: "Xulong Wang (xulong.wang@jax.org)"
+date: "April 6, 2016"
+output: pdf_document
+---
+
+```{r, include = F}
+
+library(dplyr)
+library(ggplot2)
+
+```
+
+```{r}
+
+rm(list = ls())
+setwd("~/Dropbox/GitHub/wes")
+
+options(stringsAsFactors = F)
+mdata <- read.delim("./docs/ADSP_wes_samplesheet_Jan2016_Updated_01262016.txt")
+names(mdata)
+
+```
+
+In ADSP's WES study, 3 sequencing centers - WashU, Baylor, Broad - sequenced 9949 samples. 10 of the 9949 samples were sequenced repeatedly by the 3 centers. This led to 20 redundant sequencing results. Noteworthy, depending on the specific sample, sequencing results by any of the 3 centers could be flagged as "SeqControl", which we removed from downstream analysis.
+
+```{r}
+
+table(mdata$SampleSelection)
+
+seqcontrol = mdata[mdata$SampleSelection == "SeqControl", ]
+table(mdata$ADSPID %in% seqcontrol$ADSPID)
+
+seqcontrol_all = mdata[mdata$ADSPID %in% seqcontrol$ADSPID, ]
+seqcontrol_all[, c("ADSPID", "SampleSelection", "Gender", "status", "lssc")]
+
+mdata = mdata[mdata$SampleSelection != "SeqControl", ]
+
+```
+
+This led to 9949 sequencing results of 9949 people. Each of the 9949 people was diagnosed as control or case in Alzheimer's disease status.
+
+```{r}
+
+(status = table(mdata$status))
+
+barplot(status); abline(h = 0)
+
+pct <- round(status/sum(status)*100)
+lbs <- paste(paste(names(status), pct), "%", sep = "")
+
+# pdf("./pdf/ad_pie.pdf", family = "Helvetica")
+
+# par(cex = 1.7, col = "grey30")
+pie(status, labels = lbs)
+
+# dev.off()
+
+```
+
+Age, Sex, Race, and APOE genotypes were also reported for each sample.
+
+White race constituted 97.3% of the total.
+
+```{r}
+
+race = table(mdata$Race)
+names(race) = c("American Indian", "Black", "White", "Other")
+race
+
+# pdf("./pdf/race.pdf", width = 6, height = 3)
+
+# op <- par(mar = c(5, 4, 4, 3))
+mycol <- c("grey70", "firebrick1", "dodgerblue3", "gold1", "chartreuse3", "darkorchid2")
+bar <- barplot(race, ylim = c(0, max(race) + 2e3), axes = F, border = NA, las = 1, space = 0.75, col = mycol)
+abline(h = 0, lwd = 1, col = "black")
+text(x = bar, y = race + 1e3, labels = race)
+
+# dev.off()
+
+```
+
+Unpleasantly, all 90 years older people were annotated as "90+". This accounted for 1307 people, and 13.1% of the total. We coded these people as 90 years old exactly in the downstream analysis.
+
+```{r}
+
+table(mdata$Age == "90+")
+age = mdata$Age = as.numeric(gsub("\\+", "", mdata$Age))
+summary(age)
+
+# pdf("./pdf/age.pdf", family = "Helvetica", height = 5)
+
+# par(cex = 1.7, col = "grey30")
+hist(age, col = "firebrick1")
+
+# dev.off()
+
+```
+
+There were 13% more females than males.
+
+```{r}
+
+(sex = table(mdata$Gender))
+
+pct <- round(sex/sum(sex)*100)
+lbs <- paste(paste(c("Male", "Female"), pct), "%", sep = "")
+
+# pdf("./PDF/sex.pdf", family = "Helvetica")
+
+# par(cex = 1.7, col = "grey30")
+pie(sex, label = lbs, col = c("#1f78b4", "#fb9a99"), border = F)
+
+# dev.off()
+
+```
+
+We had 6 unique APOE genotypes, which filled all the possible bi-allelic combinations of APOE's 3 alleletypes, e2/e3/e4. Homozygous e3 was predominantly the majority, while homozygous e2 or e4 were rare. Further, e4/e4 carriers showed a 15-fold increased risk of developing AD comparing to the e3/e3 carriers.  
+
+```{r}
+
+mdata$APOE = factor(mdata$APOE, levels = c("33", "22", "23", "24", "34", "44"))
+(Apoe = table(mdata$APOE))
+
+pct <- round(Apoe/sum(Apoe)*100)
+lbs <- paste(paste(names(Apoe), pct), "%", sep = "")
+
+# pdf("./pdf/apoe_bar.pdf", width = 6, height = 4)
+
+op <- par(mar = c(5, 4, 4, 3))
+bar <- barplot(Apoe, ylim = c(0, max(Apoe) + 5e2), axes = F, border = NA, las = 1, space = 0.65, col = mycol)
+abline(h = 0, lwd = 1, col = "black")
+text(x = bar, y = Apoe + 3e2, labels = Apoe)
+
+# dev.off()
+
+# pdf("./PDF/apoe.pdf", family = "Helvetica")
+
+# par(cex = 1.7, col = "grey30")
+pie(Apoe, label = lbs, col = mycol, border = F)
+
+# dev.off()
+
+(x = as.matrix(table(mdata$status, mdata$APOE)))
+(or44 = (x["case", "44"] / x["case", "33"]) / (x["control", "44"] / x["control", "33"]))
+fisher.test(x[, c("44", "33")])
+
+```
+
+Make the final phenotype data for downstream analysis
+
+```{r}
+
+tfam <- read.table("./plink/wes.tfam")
+mdata = mdata[match(tfam$V1, mdata$ADSP_SM_ID), ]
+all(tfam$V1 == mdata$ADSP_SM_ID)
+
+mdata$APOE <- factor(mdata$APOE, levels = c("33", "22", "23", "24", "34", "44")) # ref:33
+
+mdata$Apoe2 <- sapply(strsplit(as.character(mdata$APOE), ""), function(x) sum(x == 2))
+mdata$Apoe3 <- sapply(strsplit(as.character(mdata$APOE), ""), function(x) sum(x == 3))
+mdata$Apoe4 <- sapply(strsplit(as.character(mdata$APOE), ""), function(x) sum(x == 4))
+
+mdata$Gender <- factor(mdata$Gender, levels = c("0", "1")) # ref:male
+mdata$Sex = as.integer(mdata$Gender) - 1
+
+race.map = data.frame(code = c(1, 4:6), name = c("American Indian", "Black", "White", "Other"))
+mdata$Race = race.map$name[match(mdata$Race, race.map$code)]
+
+mdata$AD = 0
+mdata$AD[mdata$status == "case"] = 1
+
+save(mdata, file = "./mdata.rdt")
+
+```

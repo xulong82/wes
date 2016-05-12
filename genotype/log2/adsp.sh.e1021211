@@ -1,0 +1,14 @@
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf chr4.merged.vcf
+	--maf 0.01
+	--out chr4.merged.filtered
+	--recode
+
+After filtering, kept 9949 out of 9949 Individuals
+Outputting VCF file...
+After filtering, kept 2011 out of a possible 56147 Sites
+Run Time = 466.00 seconds

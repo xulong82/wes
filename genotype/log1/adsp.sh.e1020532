@@ -1,0 +1,120 @@
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c4_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+
+After filtering, kept 296 out of 296 Individuals
+After filtering, kept 80456 out of a possible 80456 Sites
+Run Time = 23.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c4_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+	--out c4_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes
+	--recode
+	--keep-filtered BOTH_passed
+
+After filtering, kept 296 out of 296 Individuals
+Outputting VCF file...
+After filtering, kept 72930 out of a possible 80456 Sites
+Run Time = 356.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c3_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+
+After filtering, kept 785 out of 785 Individuals
+After filtering, kept 80456 out of a possible 80456 Sites
+Run Time = 153.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c3_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+	--out c3_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes
+	--recode
+	--keep-filtered BOTH_passed
+
+After filtering, kept 785 out of 785 Individuals
+Outputting VCF file...
+After filtering, kept 72930 out of a possible 80456 Sites
+Run Time = 692.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c5_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+
+After filtering, kept 1565 out of 1565 Individuals
+After filtering, kept 80456 out of a possible 80456 Sites
+Run Time = 376.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c5_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+	--out c5_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes
+	--recode
+	--keep-filtered BOTH_passed
+
+After filtering, kept 1565 out of 1565 Individuals
+Outputting VCF file...
+After filtering, kept 72930 out of a possible 80456 Sites
+Run Time = 1188.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c2_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+
+After filtering, kept 1617 out of 1617 Individuals
+After filtering, kept 80456 out of a possible 80456 Sites
+Run Time = 381.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c2_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+	--out c2_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes
+	--recode
+	--keep-filtered BOTH_passed
+
+After filtering, kept 1617 out of 1617 Individuals
+Outputting VCF file...
+After filtering, kept 72930 out of a possible 80456 Sites
+Run Time = 1231.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c1_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+
+After filtering, kept 5686 out of 5686 Individuals
+After filtering, kept 80456 out of a possible 80456 Sites
+Run Time = 596.00 seconds
+
+VCFtools - v0.1.12a
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf c1_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes.vcf
+	--out c1_adsp.qc.wes.chr12.10913.consensus.2016_0114.snv.genotypes
+	--recode
+	--keep-filtered BOTH_passed
+
+After filtering, kept 5686 out of 5686 Individuals
+Outputting VCF file...
+After filtering, kept 72930 out of a possible 80456 Sites
+Run Time = 4285.00 seconds

@@ -1,0 +1,17 @@
+[1] "Computational time: 5199.18 seconds"
+
+
+--------------------------------------------------------------------------------
+|  JAX TORQUE EPILOGUE
+|
+|  Job ID: 1030977.cadillac-master.jax.org
+|  Exit Status: 0
+|  Requested Resources:
+|      mem=64gb,nodes=1:ppn=1,walltime=12:00:00
+|  Resources Consumed:
+|      cput=04:49:48,mem=10713392kb,vmem=11310228kb,walltime=04:49:38
+|  Walltime accuracy: 40.2%
+|
+| Epilogue Host (TORQUE Mother Superior): cadillac031
+|
+--------------------------------------------------------------------------------

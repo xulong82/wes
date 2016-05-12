@@ -1,0 +1,342 @@
+---
+title: "ADSP's WES samples: variants and associations"
+author: "Xulong Wang (xulong.wang@jax.org)"
+date: "April 7, 2016"
+output: pdf_document
+---
+
+```{r, include = F}
+
+library(dplyr)
+library(reshape2)
+library(gplots)
+library(ggplot2)
+
+rm(list = ls()); setwd("~/Dropbox/GitHub/wes")
+options(stringsAsFactors = F)
+
+```
+
+Variants were filtered out by 2 criteria: (1) outside of the shared probe regions, (2) carried a non-"PASS" flag in any sample, (3) MAF threshold 0.01. 30959 variants were kept for the association analysis.
+
+```{r}
+
+log <- read.table("./genotype/log.txt", header = T)
+colSums(log)
+
+log <- melt(data = log, id.vars = "CHR")
+log$variable <- factor(log$variable, levels = c("ALL", "PASS", "MAF"))
+
+pdf("./genotype/log.pdf", width = 9, height = 5)
+
+ggplot(log, aes(factor(CHR), value, fill = variable)) + geom_bar(stat="identity", position = "dodge") + 
+  scale_fill_brewer(palette = "Set1") + theme_bw() + xlab("") + ylab("Count")
+
+dev.off()
+
+```
+
+MDS
+
+```{r}
+
+mds = read.table("./plink/mds.mds", header = T)
+
+plot(mds$C1, mds$C2)
+
+mdata <- read.delim("./docs/ADSP_wes_samplesheet_Jan2016_Updated_01262016.txt")
+mdata = mdata[mdata$SampleSelection != "SeqControl", ]
+
+mdata = mdata[match(mds$FID, mdata$ADSP_SM_ID), ]
+all(mds$FID == mdata$ADSP_SM_ID)
+
+colors = c("blue", "red")
+Ad = factor(mdata$status, levels = c("control", "case"))
+center = rep("Balor/WashU", nrow(mdata))
+center[mdata$lssc == "Broad"] = "Broad"
+center = as.factor(center)
+select = as.factor(mdata$SampleSelection)
+
+plot(mds$C1, mds$C2, col = colors[as.numeric(select)]); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+plot(mds$C1, mds$C2, col = mdata$Race); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+```
+
+PCA
+
+```{r}
+
+eigenvec <- read.table("./plink/wes_pca.eigenvec")[-c(1:2)]
+names(eigenvec) <- paste0("PC", 1:20)
+eigenval <- read.table("./plink/wes_pca.eigenval")
+
+# load("./mdata.rdt") # old pipeline
+
+tfam <- read.table("./plink/wes.tfam")
+mdata = mdata[match(tfam$V1, mdata$ADSP_SM_ID), ]
+all(tfam$V1 == mdata$ADSP_SM_ID)
+
+pdf("./plink/pca.pdf", width = 9, height = 5, family = "Helvetica")
+
+plot(eigenval$V1 / sum(eigenval$V1) * 100, type = "b", ylab = "variance %")
+
+plot(eigenvec$PC1, col = colors[as.numeric(Ad)]); abline(0, 0)
+legend("right", legend = levels(Ad), fill = colors)
+
+plot(eigenvec$PC1, col = colors[as.numeric(center)], xlab = "Sample Index", ylab = "PC1"); abline(0, 0)
+legend("right", legend = levels(center), fill = colors)
+
+plot(eigenvec$PC1, col = colors[as.numeric(select)], xlab = "Sample Index", ylab = "PC1"); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+plot(eigenvec$PC2, col = colors[as.numeric(select)], xlab = "Sample Index", ylab = "PC2"); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+plot(eigenvec$PC3, col = colors[as.numeric(select)], xlab = "Sample Index", ylab = "PC3"); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+plot(eigenvec$PC1, eigenvec$PC2, col = colors[as.numeric(select)]); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+plot(eigenvec$PC1, eigenvec$PC2, col = mdata$Race); abline(0, 0)
+plot(eigenvec$PC1, eigenvec$PC2, col = colors[mdata$Ethnicity + 1]); abline(0, 0)
+legend("right", legend = levels(select), fill = colors)
+
+dev.off()
+
+```
+
+GWAS results
+
+```{r}
+
+chrlen <- read.delim("../X/genomes/human.hg19.genome", header = F)
+chrlen <- chrlen[match(paste0("chr", 1:22), chrlen$V1), ]
+chrlen <- cumsum(as.numeric(chrlen$V2)) * 1e-6; names(chrlen) <- c(1:22)
+chrmid <- diff(c(0, chrlen)) * 0.5 + c(0, chrlen[-length(chrlen)])
+
+plink <- read.table("./plink/plink.assoc.logistic", header = T)
+plink <- read.table("./plink/plink_enriched.assoc.logistic", header = T)
+plink <- read.table("./plink/plink_remove_enriched.assoc.logistic", header = T)
+
+plink <- plink[plink$TEST == "ADD", ]
+plink$POS <- c(0, chrlen)[plink$CHR] + plink$BP * 1e-6
+plink$col <- rep("o", nrow(plink)) 
+plink$col[plink$CHR %% 2 == 1] <- "e"
+
+load("./glmm/gmmat.suspicious.rdt")
+
+plink$shape <- 1
+plink$shape[plink$SNP %in% x$SNP] = 2
+plink$col[plink$SNP %in% x$SNP] <- "z"
+
+png("./plink/manhattan.png", width = 2e3, height = 1e3, res = 200)
+png("./plink/manhattan_enriched.png", width = 2e3, height = 1e3, res = 200)
+png("./plink/manhattan_remove_enriched.png", width = 2e3, height = 1e3, res = 200)
+
+ggplot(plink, aes(x = POS, y = -log10(P), color = col)) + 
+ggplot(plink, aes(x = POS, y = -log10(P), color = col, shape = as.factor(shape))) + 
+  geom_point(alpha = 0.9) + geom_hline(yintercept = 7.3, color = "gold") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen)) + 
+  scale_color_manual(values = c("dodgerblue3", "firebrick1", "black")) + 
+  theme_bw() + xlab("") + ylab("-log10(P)") + guides(shape = F, color = F) +
+  theme(legend.key = element_blank())
+
+dev.off()
+
+```
+
+### Diagnosis
+
+
+```{r}
+
+rm(list = ls())
+load("~/Dropbox/GitHub/wes/genotypes/guru.rdt")
+names(guru)
+
+for(obj in names(guru)) assign(obj, guru[[obj]]); rm(guru, obj)
+
+```
+
+```{r}
+
+## APOE SNPS excluded from the shared list
+
+id = "19-45411941"
+id = "19-45412079"
+
+id = "rs7412"
+id = "rs429358"
+
+id %in% guru[[1]]$ID
+
+id %in% case_br_uid
+id %in% case_bw_uid
+
+head(case_br)
+
+case_br_uid = paste(case_br$X.CHROM, case_br$POS, sep = "-")
+cont_br_uid = paste(cont_br$X.CHROM, cont_br$POS, sep = "-")
+case_bw_uid = paste(case_bw$X.CHROM, case_bw$POS, sep = "-")
+cont_bw_uid = paste(cont_bw$X.CHROM, cont_bw$POS, sep = "-")
+
+venn(list(case_br = case_br_uid, cont_br = cont_br_uid))
+venn(list(case_bw = case_bw_uid, cont_bw = cont_bw_uid))
+venn(list(bw = union(case_bw_uid, cont_bw_uid), br = union(case_br_uid, cont_br_uid)))
+
+```
+
+## others
+
+```{r, eval = F}
+
+setwd("/data/xwang/wes/optimizing/noK")
+optimizing <- lapply(dir(), function(x) { load(x); fit })
+optimizing <- lapply(optimizing, function(x) { x[, "lp"] = x[, "lp"] - min(x[, "lp"]); x})
+optimizing <- as.data.frame(do.call(rbind, optimizing))
+save(optimizing, file = "~/Dropbox/GitHub/wes/gwas/optimizing.rdt")
+
+```
+
+## Post-Pvalues
+
+```{r}
+library(ggplot2)
+
+rm(list = ls())
+setwd("~/Dropbox/GitHub/wes")
+
+load("./gwas/optimizing.rdt")
+
+vId = rownames(optimizing)
+pval = pnorm(abs(optimizing$p), sd = optimizing$se_p, lower.tail = F) * 2
+
+lrt = 2 * (optimizing$lp + 3145.4)
+pval_lrt = pchisq(lrt, df = 1, lower.tail = F) 
+plot(-log10(pval), -log10(pval_lrt))
+
+```
+
+## Genotype of extrmes
+
+```{r}
+
+extreme = optimizing[pval < 5e-8, ]
+rownames(extreme)
+
+load("../data/pheno.rdt")
+pheno <- pheno[match(names(e1), pheno$SRR), ]
+
+ggplot(pheno, aes(x = status, fill = as.factor(e1))) + geom_bar()
+ggplot(pheno, aes(x = status, fill = as.factor(e1))) + geom_bar(position = "fill")
+(tbl <- table(pheno$e1, pheno$status))
+
+```
+
+## Manhattan plot
+
+```{r}
+
+chrlen <- read.delim("~/Dropbox/GitHub/X/genomes/human.hg19.genome", header = F)
+chrlen <- chrlen[match(paste0("chr", 1:22), chrlen$V1), ]
+chrlen <- cumsum(as.numeric(chrlen$V2)) * 1e-6; names(chrlen) <- c(1:22)
+chrmid <- diff(c(0, chrlen)) * 0.5 + c(0, chrlen[-length(chrlen)])
+
+chr <- as.numeric(gsub("-.*", "", vId))
+pos <- as.numeric(gsub(".*-", "", vId)) * 1e-6 # Mb
+pos <- c(0, chrlen)[chr] + pos
+
+manhattan <- data.frame(uid = vId, chr = chr, pos = pos, p = optimizing$p, pval = -log10(pval))
+manhattan$eff <- rep("protective", nrow(manhattan)) 
+manhattan$eff[manhattan$p > 0] <- "risky"
+
+png("./manhattan.png", width = 2e3, height = 1e3, res = 200)
+
+ggplot(manhattan, aes(x = pos, y = pval, color = eff)) + 
+  geom_point(alpha = 0.7) + geom_hline(yintercept = 7.3, color = "black") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen), limits = c(0, max(pos))) + 
+  scale_color_manual(values = c("dodgerblue3", "firebrick1")) + theme_bw() + xlab("") + ylab("-log10(P)") +
+  theme(legend.key = element_blank())
+
+dev.off()
+
+```
+
+## Plink association test
+
+```{r}
+
+setwd("~/Dropbox/GitHub/wes/plink")
+
+options(stringsAsFactors = F)
+plink <- read.table("./plink.assoc.logistic", header = T)
+
+plink <- plink[plink$TEST == "ADD", ]
+plot(plink$BP, -log10(plink$P))
+
+plink$POS <- c(0, chrlen)[plink$CHR] + plink$BP * 1e-6
+
+ggplot(plink, aes(x = POS, y = -log10(P))) + 
+  geom_point(alpha = 0.7) + geom_hline(yintercept = 7.3, color = "red") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen))
+
+png("./manhattan.png", width = 2e3, height = 1e3, res = 200)
+
+ggplot(plink, aes(x = POS, y = -log10(P))) + 
+  geom_point(alpha = 0.7) + geom_hline(yintercept = 7.3, color = "red") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen))
+
+dev.off()
+
+  
+```
+
+## SNPTEST association test
+
+```{r}
+
+options(stringsAsFactors = F)
+snptest <- read.table("./snptest.out", header = T)
+snptest$pos <- c(0, chrlen)[snptest$chromosome] + snptest$position * 1e-6
+
+png("./manhattan.png", width = 2e3, height = 1e3, res = 200)
+
+ggplot(snptest, aes(x = pos, y = -log10(frequentist_add_lrt_pvalue))) + 
+ggplot(snptest, aes(x = pos, y = -log10(frequentist_add_wald_pvalue_1))) + 
+  geom_point(alpha = 0.7) + geom_hline(yintercept = 7.3, color = "red") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen))
+
+dev.off()
+  
+```
+
+## Zoom into the APOE locus. Prior on APOE locus was too strong to drop below the threshold
+
+```{r}
+
+load("./Apoe/apoe.rdt")
+
+loc_apoe <- manhattan[manhattan$uid %in% rownames(apoe), ]
+qplot(x = pos, y = p_se, data = loc_apoe, geom = "point", color = eff)
+
+```
+
+## The top adsp variants. Top adsp variants did not have high priors, so the posterior did not improve much
+
+```{r}
+
+load("../Adsp/data/glmList.rdt"); adsp <- glmList$gwas
+
+adsp <- adsp[adsp$LOD > 15, ]
+adsp2 <- manhattan[match(adsp$UID, manhattan$uid), ]
+adsp2 <- adsp2[!is.na(adsp2$p_se), ]
+
+plot(adsp2$p_se, adsp2$prior, ylim = c(0, 5))
+points(adsp2$p_se, adsp2$p_wo, col = "red")
+abline(0, 1)
+
+```

@@ -1,0 +1,22 @@
+PLINK v1.90b2o 64-bit (25 Nov 2014)
+9 arguments: --bfile wes --covar /home/xwang/Dropbox/GitHub/wes/plink/wes_cov.txt --covar-number 1-4 --logistic --out /home/xwang/Dropbox/GitHub/wes/plink/plink
+Hostname: cadillac
+Working directory: /hpcdata/xwang/wes2/plink
+Start time: Fri May  6 13:09:43 2016
+
+Random number seed: 1462554583
+64391 MB RAM detected; reserving 32195 MB for main workspace.
+49235 variants loaded from .bim file.
+9949 people (4254 males, 5695 females) loaded from .fam.
+9949 phenotype values loaded from .fam.
+Using 1 thread (no multithreaded calculations invoked).
+--covar: 4 out of 5 covariates loaded.
+Before main variant filters, 9949 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.995573.
+49235 variants and 9949 people pass filters and QC.
+Among remaining phenotypes, 5484 are cases and 4465 are controls.
+Writing logistic model association results to
+/home/xwang/Dropbox/GitHub/wes/plink/plink.assoc.logistic ... done.
+
+End time: Fri May  6 13:10:10 2016

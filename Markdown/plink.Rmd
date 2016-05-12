@@ -1,0 +1,101 @@
+---
+title: "WES GWAS by PLINK"
+author: "Xulong Wang"
+date: "February 22, 2016"
+output: pdf_document
+---
+
+
+```{r}
+
+library(ggplot2)
+
+chrlen <- read.delim("~/Dropbox/GitHub/X/genomes/human.hg19.genome", header = F)
+chrlen <- chrlen[match(paste0("chr", 1:22), chrlen$V1), ]
+chrlen <- cumsum(as.numeric(chrlen$V2)) * 1e-6; names(chrlen) <- c(1:22)
+chrmid <- diff(c(0, chrlen)) * 0.5 + c(0, chrlen[-length(chrlen)])
+
+```
+
+### GitHub/wes/gwas/gwas.sh
+
+### Covariates: age, sex, and sequencing centers (Braod, Baylor, WashU). Broad and Baylor were coded as dummy variables (0/1).
+
+```{r}
+
+options(stringsAsFactors = F)
+plink <- read.table("~/Dropbox/GitHub/wes/gwas/plink_greg.assoc.logistic", header = T)
+head(plink)
+
+```
+
+### COV1/Age, COV2/Sex, COV3/Broad, were significant. COV4/Baylor was not significant. Sex was not significant by running Fisher's test on the AD status and Sex table. Sex also was also not significant if sex was the only covariate.
+
+```{r}
+
+plink <- plink[plink$TEST == "ADD", ]
+plink$POS <- c(0, chrlen)[plink$CHR] + plink$BP * 1e-6
+
+```
+
+### Remove variants that were called only by Broad or the WashU/Baylor.
+
+```{r}
+
+load("~/Dropbox/GitHub/wes/genotypes/suspicious_variants.rdt")
+
+plink = plink[! plink$SNP %in% c(broad.na, other.na), ]
+nrow(plink)
+
+```
+
+### Manhattan
+
+```{r}
+
+vId <- plink$SNP
+chr <- as.numeric(gsub("-.*", "", vId))
+pos <- as.numeric(gsub(".*-", "", vId)) * 1e-6 # Mb
+pos <- c(0, chrlen)[chr] + pos
+
+manhattan <- data.frame(uid = vId, chr = chr, pos = pos, pval = -log10(plink$P))
+manhattan$col <- rep("o", nrow(manhattan)) 
+manhattan$col[chr %% 2 == 1] <- "e"
+manhattan$peak = "N"
+
+ggplot(manhattan, aes(x = pos, y = pval, color = col, shape = peak)) + 
+  geom_point(alpha = 0.9) + # geom_hline(yintercept = 7.3, color = "black") +
+  scale_x_continuous(breaks = chrmid, labels = names(chrlen), limits = c(0, max(pos))) + 
+  scale_color_manual(values = c("dodgerblue3", "firebrick1")) + 
+  theme_bw() + xlab("") + ylab("-log10(P)") + guides(shape = F, color = F) +
+  theme(legend.key = element_blank())
+
+```
+
+### ADSP WES results do not support the IGAP results. 
+
+```{r}
+
+load("~/Dropbox/GitHub/glmm/igap/igap.rdt")
+
+table(plink$SNP %in% igap_s1$UID)
+
+plink = plink[plink$SNP %in% igap_s1$UID, ]
+igap = igap_s1[match(plink$SNP, igap_s1$UID), ]
+
+cor(plink$P, igap$Pvalue)
+plot(-log10(plink$P), -log10(igap$Pvalue))
+
+```
+
+### Phenotype
+
+```{r}
+
+load("~/Dropbox/GitHub/wes/data/pheno.rdt")
+pheno$AD = 0
+pheno$AD[pheno$status == "case"] = 1
+
+mylogit <- glm(AD ~ Age + Sex, data = pheno, family = "binomial")
+
+```

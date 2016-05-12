@@ -1,0 +1,22 @@
+PLINK v1.90b2o 64-bit (25 Nov 2014)
+5 arguments: --bfile wes --out /home/xwang/Dropbox/GitHub/wes/plink/wes_pca --pca
+Hostname: cadillac
+Working directory: /hpcdata/xwang/wes2/plink
+Start time: Tue Apr 26 13:32:41 2016
+
+Random number seed: 1461691961
+64391 MB RAM detected; reserving 32195 MB for main workspace.
+49235 variants loaded from .bim file.
+9949 people (4254 males, 5695 females) loaded from .fam.
+9949 phenotype values loaded from .fam.
+Using up to 15 threads (change this with --threads).
+Before main variant filters, 9949 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.995573.
+49235 variants and 9949 people pass filters and QC.
+Among remaining phenotypes, 5484 are cases and 4465 are controls.
+Relationship matrix calculation complete.
+--pca: Results saved to /home/xwang/Dropbox/GitHub/wes/plink/wes_pca.eigenval
+and /home/xwang/Dropbox/GitHub/wes/plink/wes_pca.eigenvec .
+
+End time: Tue Apr 26 13:40:58 2016
