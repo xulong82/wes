@@ -1,0 +1,111 @@
+---
+title: "ADSP WES GWAS by GLMM"
+author: "Xulong Wang"
+date: "September 18, 2016"
+output: pdf_document
+---
+
+### In an earlier GWAS of ADSP WES dataset, a missense variant in CR1 gene (1:207782889) showed significant associaiton with AD status. This analysis addresses the following question: does this variant interact with APOE genotypes? 
+
+```{r, include = F}
+
+library(dplyr)
+library(ggplot2)
+options(stringsAsFactors = F)
+setwd("~/Dropbox/GitHub/wes")
+
+```
+
+### Genotype of the CR1 variant: 1:207782889
+
+```{r}
+
+load("./mdata.rdt")
+load("./genes/cr1.rdt")
+
+geno = z[, mdata$ADSP_SM_ID]
+rownames(geno)
+
+data = within(mdata, { geno = geno[1, ] })
+data$y = as.numeric(data$status == "case")
+
+ggplot(data, aes(x = status, fill = as.factor(geno))) + geom_bar()
+ggplot(data, aes(x = status, fill = as.factor(geno))) + geom_bar(position = "fill")
+
+(tbl <- table(data$geno, data$status))
+
+```
+
+### Tested allele of the variant showed significant negative association with AD status
+
+```{r}
+
+tmp = data
+glm(y ~ Age + Sex + geno + lssc, data = tmp, family = "binomial") %>% summary
+
+```
+
+### Interaction was not detected by including all APOE genotypes
+
+```{r}
+
+tmp = data
+glm(y ~ Age + Sex + APOE * geno + lssc, data = tmp, family = "binomial") %>% summary
+
+```
+
+### Interaction was not detected by including each APOE genotype separately 
+
+```{r}
+
+tmp = data
+glm(y ~ Age + Sex + Apoe2 * geno + lssc, data = tmp, family = "binomial") %>% summary
+glm(y ~ Age + Sex + Apoe3 * geno + lssc, data = tmp, family = "binomial") %>% summary
+glm(y ~ Age + Sex + Apoe4 * geno + lssc, data = tmp, family = "binomial") %>% summary
+
+```
+
+### Dominant model also did not detect significant interaction
+
+```{r}
+
+tmp = data
+
+tmp$Apoe2 = as.numeric(tmp$Apoe2 > 0)
+tmp$Apoe4 = as.numeric(tmp$Apoe4 > 0)
+
+glm(y ~ Age + Sex + Apoe2 * geno + lssc, data = tmp, family = "binomial") %>% summary
+glm(y ~ Age + Sex + Apoe4 * geno + lssc, data = tmp, family = "binomial") %>% summary
+
+```
+
+## Stratify population by APOE genotypes suggested the protective effect of the allele was most profound in APOE/E4 carriers. Phil De Jager's paper reported this as well.
+
+```{r}
+
+tmp = data[data$Apoe3 == 2, ]
+glm(y ~ Age + Sex + geno + lssc, data = tmp, family = "binomial") %>% summary
+
+tmp = data[data$Apoe2 > 0, ]
+glm(y ~ Age + Sex + geno + lssc, data = tmp, family = "binomial") %>% summary
+
+tmp = data[data$Apoe4 > 0, ]
+glm(y ~ Age + Sex + geno + lssc, data = tmp, family = "binomial") %>% summary
+
+```
+
+## APOE genotype stratification versus interaction model
+
+```{r}
+
+tmp = data[c("y", "geno", "Apoe3")]
+tmp$geno = as.numeric(tmp$geno > 0)
+tmp$Apoe3 = as.numeric(tmp$Apoe3 > 0)
+
+with(tmp, table(geno, Apoe3))
+
+glm(y ~ Apoe3 * geno, data = tmp, family = "binomial") %>% summary
+glm(y ~ geno, data = tmp[tmp$Apoe3 == 0, ], family = "binomial") %>% summary
+glm(y ~ geno, data = tmp[tmp$Apoe3 == 1, ], family = "binomial") %>% summary
+
+```
